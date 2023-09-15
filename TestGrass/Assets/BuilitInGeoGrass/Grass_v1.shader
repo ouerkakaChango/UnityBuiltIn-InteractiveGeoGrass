@@ -148,11 +148,11 @@ Shader "XCGrass/grass_v1"
 		float r = 10;
 		if (length(worldPos.xz) < r)
 		{
-			forceScale = saturate(1 - length(worldPos.xz) / r);
+			forceScale = 1;// saturate(1 - length(worldPos.xz) / r);
 			//_BladeHeight = 0;
 			//_BladeWidthRandom = 0;
 			windRotation = identity;
-			colorInten = 1-forceScale;
+			colorInten = 0.8f;
 		}
 		float2 f2 = ForceDir(float2(1, 0));
 		float3x3 tt = AngleAxis3x3(UNITY_PI *0.49* forceScale, float3(f2.x,f2.y,0));
