@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/BuilitInGeoGrass/Main.unity
+    path: Assets/BuilitInGeoGrass/ExampleScene_XCGrass.unity
     guid: bc58ece27f7998e439912a63b8244868
   m_configObjects: {}
