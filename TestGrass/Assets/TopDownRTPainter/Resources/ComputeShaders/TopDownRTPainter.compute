@@ -1,0 +1,71 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel InitPaint
+#pragma kernel FadeCopy
+#pragma kernel PaintPos
+
+RWTexture2D<half4> Result;
+RWTexture2D<half4> LastFrame;
+
+struct RTUnitInfo
+{
+	float2 pos;
+	float radius;
+};
+StructuredBuffer<RTUnitInfo> unitArr;
+float copyAlpha;
+//StructuredBuffer<int> tris;
+//StructuredBuffer<float3> vertices;
+//StructuredBuffer<float3> normals;
+//StructuredBuffer<BVHNode> bvh;
+//const int treeDepth;
+//
+//float darkPower;
+//int SPP;
+//
+//float2 quadSize;
+//float3 quadPos;
+//float3 lightDir;
+
+int GetSize(StructuredBuffer<RTUnitInfo> arr)
+{
+	uint numStructs, stride;
+	arr.GetDimensions(numStructs, stride);
+	return (int)numStructs;
+}
+
+//#########################################################################################################
+[numthreads(8, 8, 1)]
+void InitPaint(uint3 id : SV_DispatchThreadID)
+{
+	Result[id.xy] = float4(0,0,0, 0);
+}
+//#########################################################################################################
+[numthreads(8, 8, 1)]
+void FadeCopy(uint3 id : SV_DispatchThreadID)
+{
+	Result[id.xy] = float4(LastFrame[id.xy].rgb, LastFrame[id.xy].a* copyAlpha);
+}
+//#########################################################################################################
+#include "HLSL/CommonDef.hlsl"
+#include "HLSL/SDF/SDFCommonDef.hlsl"
+[numthreads(8, 8, 1)]
+void PaintPos(uint3 id : SV_DispatchThreadID)
+{
+	float4 result = LastFrame[id.xy];
+	float sdf = 1;
+	int num = GetSize(unitArr);
+	float2 p = GetUV(Result, id);
+	for (int i = 0; i < num; i++)
+	{
+		float2 center = unitArr[i].pos;
+		center = 1 - center;
+		sdf = min(sdf, SDFSphere(p, center, unitArr[i].radius));
+	}
+	if (sdf < 0)
+	{
+		result = float4(1, 0, 0, 1);
+	}
+	Result[id.xy] = result;
+	//Result[id.xy] = float4(p, 0, 1);
+}
+//#########################################################################################################

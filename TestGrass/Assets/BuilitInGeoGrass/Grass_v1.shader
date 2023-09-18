@@ -19,6 +19,9 @@ Shader "XCGrass/grass_v1"
 		_WindDistortionMap("Wind Distortion Map", 2D) = "white" {}
 		_WindFrequency("Wind Frequency", Vector) = (0.05, 0.05, 0, 0)
 		_WindStrength("Wind Strength", Float) = 1
+
+		_MaskRT("_MaskRT", 2D) = "black" {}
+		_MaskUV("_MaskUV", Vector) = (0, 0, 0, 0)
     }
 
 	CGINCLUDE
@@ -73,7 +76,9 @@ Shader "XCGrass/grass_v1"
 	float2 _WindFrequency;
 	float _WindStrength;
 
-
+	sampler2D _MaskRT;
+	float4 _MaskRT_ST;
+	float4 _MaskUV;
 	geometryOutput VertexOutput(float3 pos, float2 uv, float4 grassInfo)
 	{
 		geometryOutput o;
@@ -146,13 +151,18 @@ Shader "XCGrass/grass_v1"
 		float colorInten = 1;
 		float3 worldPos = mul(unity_ObjectToWorld, IN[0].vertex).xyz;
 		float r = 10;
-		if (length(worldPos.xz) < r)
+		//if (length(worldPos.xz) < r)
+		float2 planeUV = (worldPos.xz - _MaskUV.xy) / _MaskUV.zw;
+		//!!! 不知道为啥，xz是反的，不管，强行转一下
+		planeUV = 1 - planeUV;
+		half4 mask = tex2Dlod(_MaskRT, float4(planeUV,0,0));
+		//if(mask.r>0.5&&mask.a>0.01)
 		{
-			forceScale = 1;// saturate(1 - length(worldPos.xz) / r);
+			forceScale = mask.a;// mask.a;// saturate(1 - length(worldPos.xz) / r);
 			//_BladeHeight = 0;
 			//_BladeWidthRandom = 0;
-			windRotation = identity;
-			colorInten = 0.8f;
+			windRotation = lerp(windRotation, identity,mask.a);
+			colorInten = lerp(1,0.2,mask.a);
 		}
 		float2 f2 = ForceDir(float2(1, 0));
 		float3x3 tt = AngleAxis3x3(UNITY_PI *0.49* forceScale, float3(f2.x,f2.y,0));
