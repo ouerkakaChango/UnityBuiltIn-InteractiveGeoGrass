@@ -129,6 +129,7 @@ public class RTPlane : MonoBehaviour
         cs.Dispatch(kInx, resolution.x / 8, resolution.y / 8, 1);
         //### compute
         //#####################################;
+        buffer_unitArr.Dispose();
     }
 
     List<RTUnitInfo> tempUnitList = new List<RTUnitInfo>();
